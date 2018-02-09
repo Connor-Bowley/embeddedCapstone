@@ -59,7 +59,7 @@
 #include  "GUIDEMO_API.h"
 #include  "pushbutton.h"
 #include  "adc.h"
-#include  "alarm.h"
+//#include  "alarm.h"
 #include  "scuba.h"
 
 #define LED1_STKSZ (192)
@@ -105,7 +105,7 @@ static  OS_TCB   AppTaskGUI_TCB, led1_task_TCB,
    button1_TCB,
    button2_TCB,
    adc_TCB,
-   alarm_TCB,
+//   alarm_TCB,
    master_TCB;
 static  CPU_STK  AppTaskGUI_Stk[APP_CFG_TASK_GUI_STK_SIZE], 
    led1_task_stk[LED1_STKSZ], 
@@ -115,7 +115,7 @@ static  CPU_STK  AppTaskGUI_Stk[APP_CFG_TASK_GUI_STK_SIZE],
    button1_stk[BUTTON_STKSZ],
    button2_stk[BUTTON_STKSZ],
    adc_stk[ADC_STKSZ],
-   alarm_stk[ALARM_STKSZ],
+//   alarm_stk[ALARM_STKSZ],
    master_stk[MASTER_STKSZ];
 
 static OS_MUTEX ledMut;
@@ -149,7 +149,7 @@ static void startup(void * p_arg)
    //prep stuff for dive
    g_depth = 0;
    g_air = 5000; // 50 L
-   GUIDEMO_API_writeLine(0, "Brand");
+   GUIDEMO_API_writeLine(0, "Dive++");
    adcInit();
        
    //create mutexes
@@ -217,12 +217,12 @@ static void startup(void * p_arg)
                 OS_OPT_TASK_NONE,&err);
    my_assert(OS_ERR_NONE == err);
    
-   OSTaskCreate(&alarm_TCB, "Alarm Task", (OS_TASK_PTR)alarm_task,
-                0,14,
-                &alarm_stk[0],ALARM_STKSZ/10,ALARM_STKSZ,
-                0u,0u,0,
-                OS_OPT_TASK_NONE,&err);
-   my_assert(OS_ERR_NONE == err);
+//   OSTaskCreate(&alarm_TCB, "Alarm Task", (OS_TASK_PTR)alarm_task,
+//                0,14,
+//                &alarm_stk[0],ALARM_STKSZ/10,ALARM_STKSZ,
+//                0u,0u,0,
+//                OS_OPT_TASK_NONE,&err);
+//   my_assert(OS_ERR_NONE == err);
    
    OSTaskCreate(&master_TCB, "Master Task", (OS_TASK_PTR)master_task,
                 0,13,
@@ -297,21 +297,36 @@ static void useAir(int32_t amount_cl){
    my_assert(err == OS_ERR_NONE);
 }
 
-static void det_alarms(curAir, rate, g_depth)
+static void det_alarms(int32_t curAir, int32_t rate, int32_t g_depth)
 {
     uint32_t gas_req_to_surf = 0;
     uint32_t color =  BG_COLOR_GREEN;
+
+    char alarmNone[] = "Alarm: None";
+    char alarmLow[] = "Alarm: Low";
+    char alarmMedium[] = "Alarm: Medium";
+    char alarmHigh[] = "Alarm: High";
     
     gas_req_to_surf = gas_to_surface_in_cl(g_depth);
-      
-    if(curAir < gas_req_to_surf)
-      color = BG_COLOR_RED;
-    else if(rate > 15)
-      color = BG_COLOR_YELLOW;
-    else if(g_depth>40)
-      color = BG_COLOR_BLUE;
     
-    GUIDEMO_SetColorBG(color);
+    char * curAlarm = alarmNone; 
+    if(curAir < gas_req_to_surf)
+    {
+      color = BG_COLOR_RED;
+      curAlarm = alarmHigh;
+    }
+    else if(rate < -15)
+    {
+      color = BG_COLOR_YELLOW;
+      curAlarm = alarmMedium;      
+    }
+    else if(g_depth > MAX_SAFE_DEPTH)
+    {
+      color = BG_COLOR_BLUE;
+      curAlarm = alarmLow; 
+    }
+    GUIDEMO_SetColorBG((BG_COLOR)color);
+    GUIDEMO_API_writeLine(7, curAlarm);
 }
 
 static void led_task(void * p_arg)
