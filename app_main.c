@@ -373,6 +373,7 @@ static void master_task(void * p_arg){
      
       //calc rate ascent/descent and display
       int32_t rate = ADC2RATE((int32_t)getADC());
+      rate = (g_depth == 0 && rate < 0) ? 0 : rate;
       
       int32_t depthChange = depth_change_in_mm(rate);
         
@@ -388,8 +389,6 @@ static void master_task(void * p_arg){
       det_alarms(curAir, rate, g_depth);
       
      //display depth, rate, air, alarms
-      if(g_depth == 0)
-        rate = 0;
       if(getIsMeters()){
         sprintf(depth_str,"DEPTH: %d m",g_depth / 1000);
         sprintf(rate_str,"RATE: %d m",rate);
