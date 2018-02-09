@@ -19,6 +19,7 @@
 
 extern void     adc_task (void * p_arg);
 extern void     adcInit(void);
+extern uint32_t     getADC(void);
 extern void     ADC_IRQHandler(void);
 extern OS_FLAG_GRP g_alarm_flags;
 
