@@ -382,14 +382,14 @@ static void master_task(void * p_arg){
      //calc air and use it
       int32_t airChange = gas_rate_in_cl(g_depth);
       useAir(airChange);
-     
-     //add to dive time
-     
+          
      //calculate alarms
       int32_t curAir = getAir();     
       det_alarms(curAir, rate, g_depth);
       
      //display depth, rate, air, alarms
+      if(g_depth == 0)
+        rate = 0;
       if(getIsMeters()){
         sprintf(depth_str,"DEPTH: %d m",g_depth / 1000);
         sprintf(rate_str,"RATE: %d m",rate);
