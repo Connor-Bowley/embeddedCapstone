@@ -122,10 +122,10 @@ static OS_MUTEX ledMut;
 
 static int32_t g_air; //in centiliters, from 0 - 200000 (0 - 2000L)
 static int32_t g_depth; //in millimeters
-int8_t g_isMeters = 1; //feet if 0, meters otherwise
+static int8_t g_isMeters = 1; //feet if 0, meters otherwise
 
-OS_MUTEX g_isMetersMut;
-OS_MUTEX g_airMut;
+static OS_MUTEX g_isMetersMut;
+static OS_MUTEX g_airMut;
 
 
 static void startup(void * p_arg)
@@ -339,10 +339,25 @@ static void master_task(void * p_arg){
    OS_ERR err;
    char depth_str[15], rate_str[15], air_str[15], time_str[15];
    
+   uint32_t total_seconds = 0;
+   uint8_t onHalf = 0;
+   
    while(1){
+     if(g_depth != 0){
+        if(onHalf)
+          total_seconds++;
+        onHalf = !onHalf;
+     }
+     uint32_t myTime = total_seconds; //currently in seconds
+     uint32_t seconds = myTime % 60;
+     myTime /= 60; //turn to minutes
+     uint32_t minutes = myTime % 60;
+     uint32_t hours = myTime / 60;
+     
+     
      
       //calc rate ascent/descent and display
-      int32_t rate = ADC2RATE(getADC());
+      int32_t rate = ADC2RATE((int32_t)getADC());
       
       int32_t depthChange = depth_change_in_mm(rate);
         
@@ -369,9 +384,11 @@ static void master_task(void * p_arg){
         sprintf(rate_str,"RATE: %d ft",MM2FT(rate * 1000));
       }
       sprintf(air_str,"AIR: %d.%d L",curAir/100,curAir % 100);
+      sprintf(time_str,"EDT: %d:%02d:%02d",hours,minutes,seconds);
       GUIDEMO_API_writeLine(2,depth_str);
       GUIDEMO_API_writeLine(3,rate_str);
       GUIDEMO_API_writeLine(4,air_str);
+      GUIDEMO_API_writeLine(5,time_str);
      
      //sleep for our half second CHANGE THIS???
      OSTimeDlyHMSM(0,0,0,500,OS_OPT_TIME_DLY,&err);
