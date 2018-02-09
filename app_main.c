@@ -356,6 +356,8 @@ static void master_task(void * p_arg){
      //calculate alarms
       
      //display depth, rate, air, alarms
+      if(g_depth == 0)
+        rate = 0;
       if(getIsMeters()){
         sprintf(depth_str,"DEPTH: %d m",g_depth / 1000);
         sprintf(rate_str,"RATE: %d m",rate);
