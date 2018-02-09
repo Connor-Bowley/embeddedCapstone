@@ -297,6 +297,23 @@ static void useAir(int32_t amount_cl){
    my_assert(err == OS_ERR_NONE);
 }
 
+static void det_alarms(curAir, rate, g_depth)
+{
+    uint32_t gas_req_to_surf = 0;
+    uint32_t color =  BG_COLOR_GREEN;
+    
+    gas_req_to_surf = gas_to_surface_in_cl(g_depth);
+      
+    if(curAir < gas_req_to_surf)
+      color = BG_COLOR_RED;
+    else if(rate > 15)
+      color = BG_COLOR_YELLOW;
+    else if(g_depth>40)
+      color = BG_COLOR_BLUE;
+    
+    GUIDEMO_SetColorBG(color);
+}
+
 static void led_task(void * p_arg)
 {
     OS_ERR  err;
@@ -354,6 +371,8 @@ static void master_task(void * p_arg){
      //add to dive time
      
      //calculate alarms
+      int32_t curAir = getAir();     
+      det_alarms(curAir, rate, g_depth);
       
      //display depth, rate, air, alarms
       if(g_depth == 0)
@@ -366,7 +385,6 @@ static void master_task(void * p_arg){
         sprintf(depth_str,"DEPTH: %d ft",MM2FT(g_depth));
         sprintf(rate_str,"RATE: %d ft",MM2FT(rate * 1000));
       }
-      int32_t curAir = getAir();
       sprintf(air_str,"AIR: %d.%d L",curAir/100,curAir % 100);
       sprintf(time_str,"EDT: %d:%02d:%02d",hours,minutes,seconds);
       GUIDEMO_API_writeLine(2,depth_str);
@@ -379,6 +397,7 @@ static void master_task(void * p_arg){
      my_assert(err == OS_ERR_NONE);
    }
 }
+
 
 
 static void buttonPress(void * p_arg){
