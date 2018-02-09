@@ -367,9 +367,7 @@ static void master_task(void * p_arg){
      //calc air and use it
       int32_t airChange = gas_rate_in_cl(g_depth);
       useAir(airChange);
-     
-     //add to dive time
-     
+          
      //calculate alarms
       int32_t curAir = getAir();     
       det_alarms(curAir, rate, g_depth);
